@@ -497,11 +497,23 @@ server <- function(input, output, session) {
 
   # ---- harita ilk çizim ----
   output$harita <- renderLeaflet({
-    leaflet() |>
-      addProviderTiles(providers$CartoDB.Positron, group = "Sade") |>
-      addProviderTiles(providers$Esri.WorldImagery, group = "Uydu") |>
-      addProviderTiles(providers$OpenTopoMap, group = "Topografik") |>
-      addLayersControl(baseGroups = c("Sade", "Uydu", "Topografik"),
+    # Altlıklar: API anahtarı İSTEMEYEN kaynaklar, adresleri doğrudan yazılı
+    # (CARTO artık anahtar istiyor; "API KEY REQUIRED" filigranı buradan geliyordu)
+    esri <- "https://server.arcgisonline.com/ArcGIS/rest/services/%s/MapServer/tile/{z}/{y}/{x}"
+    leaflet(options = leafletOptions(maxZoom = 18)) |>
+      addTiles(urlTemplate = sprintf(esri, "Canvas/World_Light_Gray_Base"), group = "Sade",
+        attribution = "Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ",
+        options = tileOptions(maxNativeZoom = 16, maxZoom = 18)) |>
+      addTiles(urlTemplate = "https://tile.openstreetmap.org/{z}/{x}/{y}.png", group = "Sokak",
+        attribution = "&copy; OpenStreetMap katkıcıları",
+        options = tileOptions(maxZoom = 19)) |>
+      addTiles(urlTemplate = sprintf(esri, "World_Imagery"), group = "Uydu",
+        attribution = "Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics",
+        options = tileOptions(maxZoom = 18)) |>
+      addTiles(urlTemplate = "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", group = "Topografik",
+        attribution = "&copy; OpenStreetMap, SRTM | &copy; OpenTopoMap (CC-BY-SA)",
+        options = tileOptions(maxZoom = 17, subdomains = "abc")) |>
+      addLayersControl(baseGroups = c("Sade", "Sokak", "Uydu", "Topografik"),
         options = layersControlOptions(collapsed = TRUE)) |>
       addScaleBar(position = "bottomleft") |>
       addFullscreenControl(position = "topleft") |>
